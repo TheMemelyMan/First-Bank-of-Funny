@@ -1,0 +1,18 @@
+{
+    "chatlogs":
+    [{
+        "server":
+        [{
+            "messageContent": "",
+            "messageID": "",
+            "messageURL": "",
+            "userName": "",
+            "userID": "",
+            "serverName": "",
+            "serverID": "",
+            "channelName": "",
+            "channelID": ""
+        }]
+
+    }]
+}
