@@ -3,22 +3,11 @@ from discord.ext import commands
 from discord.utils import get
 import random
 import json
-from pprint import pprint
-from discord import NotFound
-import requests
-import urllib
-from discord import Member
-from discord.ext.commands import has_permissions, MissingPermissions
-from discord.ext.commands import has_permissions, CheckFailure
-import copy
-import os
-from os import listdir
-from derpibooru import Search
+import discord.ext.commands
 from pymongo import MongoClient
 import time
-from threading import Timer
 import threading
-
+from discord.voice_client import VoiceClient
 
 with open('config.json') as f:
     configData = json.load(f)
@@ -27,20 +16,19 @@ with open('chatlog.json') as g:
 
 
 prefix = configData["information"][0]["prefix"]
-dtoken = configData["tokens"][0]["token"]
 mongoPath = configData["tokens"][0]["mongoPath"]
 
 client = MongoClient(mongoPath)
 
 #database clients
 dbDiscord = client['Discord']
-dbRequestBanner = client['bannerRequestQueues']
-dbApprovedBanner = client['bannerApprovedQueues']
-
 
 description = '''Clowbot commands and such. Ping Memely if you need any help'''
 bot = commands.Bot(command_prefix=prefix, description=description)
 
+class Main_Commands():
+    def __init__(self, bot):
+        self.bot = bot
 
 @bot.event
 async def on_ready():
@@ -68,6 +56,9 @@ async def on_message(message):
     ID = str(message.guild.id)
 
     content = message.content
+    
+
+    
     try:
         content += " : " + message.attachments[0].url
     except IndexError:
@@ -96,7 +87,7 @@ async def on_message(message):
 
     
     await bot.process_commands(message)
-
+    
     """async for messages in message.channel.history():
         print(messages.content)"""
 
@@ -132,402 +123,164 @@ async def getShare(ctx):
         await ctx.send("You aren't in a voice chat, clown")
 
 @bot.command()
-@has_permissions(administrator=True)
-async def banner(ctx, bannerimage: str):
-    serverID = str(ctx.guild.id)
-    requestDirName = f"botQueueAwaiting/{serverID}"
-    approvedDirName = f"botQueueApproved/{serverID}"
-    bannerDirName = f"bannerCommandFolder/{serverID}"
-    
-    checkDir(requestDirName, approvedDirName, bannerDirName)
-
-    try:
-        img_data = requests.get(bannerimage).content
-        with open(str(bannerDirName) + "/bannerImage" + '.jpg', 'wb') as handler:
-            handler.write(img_data)
-        await ctx.guild.edit(banner=open(str(bannerDirName) + "/bannerImage" + '.jpg', mode='rb').read())
-    except Exception:
-        await ctx.send("Something went wrong")
-@banner.error
-async def bannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-
-@bot.command()
-async def bannerQueue(ctx):
-    """Displays both the request banner queue and the mod approved queue"""
-
-    serverID = str(ctx.guild.id)
-    requestDirName = f"botQueueAwaiting/{serverID}"
-    approvedDirName = f"botQueueApproved/{serverID}"
-
-    queueUpRequests = dbRequestBanner[str(serverID)]
-    queueUpApproved = dbApprovedBanner[str(serverID)]
-
-    # Pink Name zone
-    requestEmbed=discord.Embed(title="Current queue for banners requested by users", color=0x97a7d2)
-    requestEmbed.set_thumbnail(url="https://cdn.discordapp.com/attachments/387432001180925953/591601803033051136/hcc-avatar.png")
-    
-    inDB = queueUpRequests.find()
-    filecount = 0
-    try:
-        for entry in inDB:
-            requestedBy = entry['Requesting User']        
-            bannerLink = entry['bannerURL']
-            filecount += 1
-
-            requestEmbed.add_field(name="Image #" + str(filecount), value=requestedBy + " - [Image Link](" + bannerLink + ")", inline=False)
-    except IndexError:
-        requestEmbed.add_field(name="No images in the queue...", value="Not a single goddamn one...", inline=False)
-    await ctx.send(embed=requestEmbed)
-
-    
-
-    #  Janny approved
-    approvedEmbed=discord.Embed(title="Current queue for banners approved by jannies", color=0x97a7d2)
-    approvedEmbed.set_thumbnail(url="https://cdn.discordapp.com/attachments/387432001180925953/591601803033051136/hcc-avatar.png")
-
-    inDB = queueUpApproved.find()
-    filecount = 0
-    try:
-        for entry in inDB:
-            requestedBy = entry['Requesting User']        
-            bannerLink = entry['bannerURL']
-            filecount += 1
-
-            approvedEmbed.add_field(name="Image #" + str(filecount), value=requestedBy + " - [Image Link](" + bannerLink + ")", inline=False)
-    except IndexError:
-        approvedEmbed.add_field(name="No images in the queue...", value="Not a single goddamn one...", inline=False)
-    await ctx.send(embed=approvedEmbed)
-
-
-@bot.command()
-async def requestBanner(ctx, bannerImage: str):
-    """Sends banners off to a queue for admins to double check before putting them into an approved queue. Requres a link and a name"""
-    #renames items in queue with the right numbers in the db
-    try:
-        renameQueued(ctx.guild.id)
-    except:
-        await ctx.send("Unable to fix database")
-    
-    if bannerImage.startswith('http') and bannerImage.lower().endswith(('.png', '.jpg', '.jpeg')):
-        serverID = str(ctx.guild.id)
-        filecount = 0
-
-        queueUp = dbRequestBanner[str(serverID)]
-
-        inDB = queueUp.find()
-
-
-
-        # counts files
-        for entry in inDB:
-            #print("Got to for loop")
-            filecount += 1
-        if filecount > 5:
-            #print("Got to more than 5 images")
-            await ctx.send("Honk...! There is more than 5 images...! Dont kill Memely's computer...!")
-        else:
-            #print("Got to else")
-            post_data = {
-            'Requesting User': ctx.message.author.name,
-            'bannerURL': bannerImage,
-            'File Number': filecount,
-            'User ID': ctx.message.author.id
-            }
-            try:
-                await ctx.send("Attempting to add to banner request queue. . .")
-                bannerResult = queueUp.insert_one(post_data)
-                await ctx.send("Successfully added banner to request queue!")
-            except:
-                await ctx.send("Honk honk! Did not post to DB successfully!")
-    else:
-        await ctx.send("Honk honk! Ya typed it wrong, ya dundy! Try !requestBanner <link>")
-
-@requestBanner.error
-async def requestBannerError(ctx, error):
-    await ctx.send("Honk honk! Ya typed it wrong, ya dundy! Try !requestBanner <link> and make sure its a png, jpg, or jpeg!")
-
-
-@bot.command()
-@has_permissions(administrator=True)
-async def startBannerQueue(ctx):
-    #starting banner queue ####################################################################################################
-    queueUpApproved = dbApprovedBanner[str(ctx.guild.id)]
-
-    inDB = queueUpApproved.find()
-    serverID = ctx.guild.id
-    requestDirName = f"botQueueAwaiting/{serverID}"
-    approvedDirName = f"botQueueApproved/{serverID}"
-    bannerDirName = f"bannerCommandFolder/{serverID}"
-    
-    checkDir(requestDirName, approvedDirName, bannerDirName)
-
-    # for each entry in the database
-        # do banner code to change banner
-        # run timer func
-    for entry in inDB:
-        link = entry['bannerURL']   
+async def funny(ctx, UID:int, role:str):
+    if(ctx.author.id == 380801506137473034):
         try:
-            img_data = requests.get(link).content
-            #Dont forget to change this to a different dir once you get it going
-            with open(str(approvedDirName) + "/bannerImage" + '.jpg', 'wb') as handler:
-                handler.write(img_data)
-            await ctx.guild.edit(banner=open(str(approvedDirName) + "/bannerImage" + '.jpg', mode='rb').read())
-        except Exception:
-            await ctx.send("Something went wrong")
-        time.sleep(1)
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            for r in member.roles:
+                if(str(r) == role):
+                    print("Removing role: " + str(r))
+                    await member.remove_roles(r)
+                    break
+        except Exception as e:
+            print(e)
+            print("Didnt work")
+    else:
+        await ctx.send("You're not funny enough")
 
 @bot.command()
-@has_permissions(administrator=True)
-async def nextBanner(ctx):
-    #renames items in queue with the right numbers in the db
-    try:
-        renameQueued(ctx.guild.id)
-    except:
-        await ctx.send("Unable to fix database")
-
-    queueUpApproved = dbApprovedBanner[str(ctx.guild.id)]
-    inDB = queueUpApproved.find()
-
-    serverID = ctx.guild.id
-    requestDirName = f"botQueueAwaiting/{serverID}"
-    approvedDirName = f"botQueueApproved/{serverID}"
-    bannerDirName = f"bannerCommandFolder/{serverID}"
-    
-    checkDir(requestDirName, approvedDirName, bannerDirName)
-
-
-
-    # for each entry in the database
-        # do banner code to change banner
-        # run timer func
-    for entry in inDB:
-        link = entry['bannerURL']   
+async def unfunny(ctx, UID:int, role:str):
+    if(ctx.author.id == 380801506137473034):
         try:
-            await ctx.send("Putting up next banner...")
-            img_data = requests.get(link).content
-            #saves image locally for upload to banner for server
-            with open(str(approvedDirName) + "/bannerImage" + '.jpg', 'wb') as handler:
-                handler.write(img_data)
-            await ctx.guild.edit(banner=open(str(approvedDirName) + "/bannerImage" + '.jpg', mode='rb').read())
-            await ctx.send("Next banner up by " + entry['Requesting User'])
-
-            #deletes entry
-            queueUpApproved.delete_one(entry)
-            break
-        except Exception:
-            await ctx.send("Something went wrong")
-
-@startBannerQueue.error
-async def startBannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-@bot.command()
-@has_permissions(administrator=True)
-async def pauseBannerQueue():
-    #pausing banner queue ####################################################################################################
-    x = 0
-@pauseBannerQueue.error
-async def pauseBannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-@bot.command()
-@has_permissions(administrator=True)
-async def approveBanner(ctx, bannerNumber : int):
-    #approving banner
-
-    #renames items in queue with the right numbers in the db
-    try:
-        renameQueued(ctx.guild.id)
-    except:
-        await ctx.send("Unable to fix database")
-
-    queueUpRequests = dbRequestBanner[str(ctx.guild.id)]
-    queueUpApproved = dbApprovedBanner[str(ctx.guild.id)]
-
-    inRequestDB = queueUpRequests.find()
-    inApprovedDB = queueUpApproved.find()
-
-    for entry in inRequestDB:
-        if entry["File Number"] == bannerNumber-1:
-            try:
-                await ctx.send("Attempting to add to banner approved queue...")
-                bannerApproved = queueUpApproved.insert_one(entry)
-                bannerRequested = queueUpRequests.delete_one(entry)
-                await ctx.send("Successfully added banner to approved queue!")
-                
-            except:
-                await ctx.send("Honk honk! Did not post to DB successfully!")            
-        else:
-            x=0
-@approveBanner.error
-async def approveBannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            for r in ctx.guild.roles:
+                if(str(r) == role):
+                    print("Adding role: " + str(r))
+                    await member.add_roles(r)
+                    break
+        except Exception as e:
+            print(e)
+            print("Didnt work")
     else:
-        await ctx.send("Honk honk, fool...! You typed it wrong, and now I'm goonin'...! Type it like !approveBanner <number of the image in the request queue>")
+        await ctx.send("Okay sweaty :^)")
 
 @bot.command()
-@has_permissions(administrator=True)
-async def disapproveBanner(ctx, bannerNumber : int):
-    #disapproving banners
+async def goon(ctx, UID:int):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936):
+        try:
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            i = 15
 
-    #renames items in queue with the right numbers in the db
-    try:
-        renameQueued(ctx.guild.id)
-    except:
-        await ctx.send("Unable to fix database")
-
-    queueUpRequests = dbRequestBanner[str(ctx.guild.id)]
-    inRequestDB = queueUpRequests.find()
-
-    await ctx.send("Disapproving banner number " + bannerNumber + " from request queue")
-    for entry in inRequestDB:
-        if entry["File Number"] == bannerNumber-1:
-            try:
-                await ctx.send("Attempting to remove from queue. . .")
-                bannerRequested = queueUpRequests.delete_one(entry)
-                await ctx.send("Successfully removed banner from request queue!")
-            except:
-                await ctx.send("Honk honk! Did not remove from DB successfully!")            
-        else:
-            await ctx.send("That banner doesnt exist!")
-@disapproveBanner.error
-async def disapproveBannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-@bot.command()
-@has_permissions(administrator=True)
-async def skipBanner():
-    #skipping banners ####################################################################################################
-    x = 0
-@skipBanner.error
-async def skipBannerError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-@bot.command()
-@has_permissions(administrator=True)
-async def clearApproved(ctx):
-    #clearing accepted queued banners
-    queueUpApproved = dbApprovedBanner[str(ctx.guild.id)]
-    inApprovedDB = queueUpApproved.find()
-
-    try:
-        for entry in inApprovedDB:
-            bannerList = queueUpApproved.delete_one(entry)
-        await ctx.send("Successfully cleared approved queue!")
-    except:
-        await ctx.send("Queue not successfully cleared...")
-@clearApproved.error
-async def clearAcceptedError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-@bot.command()
-@has_permissions(administrator=True)
-async def clearRequested(ctx):
-    #clearing requested queued banners
-    queueUpRequests = dbRequestBanner[str(ctx.guild.id)]
-    inRequestDB = queueUpRequests.find()
-    try:
-        for entry in inRequestDB:
-            bannerList = queueUpRequests.delete_one(entry)
-        await ctx.send("Successfully cleared request queue!")
-    except:
-        await ctx.send("Queue not successfully cleared...")
-@clearRequested.error
-async def clearRequestError(ctx, error):
-    if isinstance(error, CheckFailure):
-        text = "Honk Honk...! Sorry {}, you do not have permissions to do that, clown!".format(ctx.message.author)
-        await ctx.send(text)
-
-############################################   RANDOM STUFF   ############################################
-### Test command for resting the renamedQueue() function  ###
-@bot.command()
-async def rename(ctx):
-    await ctx.send("Trying to fix")
-    try:
-        renameQueued(ctx.guild.id)
-        await ctx.send("Stuff's fixed")
-    except:
-        await ctx.send("Stuff's still broken")
-@bot.command()
-async def roll(ctx, dice: str):
-    """Rolls a dice in NdN format."""
-    try:
-        rolls, limit = map(int, dice.split('d'))
-    except Exception:
-        await ctx.send('Format has to be in NdN!')
-        return
-
-    result = ', '.join(str(random.randint(1, limit)) for r in range(rolls))
-    await ctx.send(result)
-
-@bot.command(description='For when you wanna settle the score some other way')
-async def choose(ctx, *choices: str):
-    """Chooses between multiple choices."""
-    await ctx.send(random.choice(choices))
-
-@bot.command()
-async def repeat(ctx, times: int, content: str):
-    """Repeats a message multiple times."""
-    if times > 5:
-        await ctx.send('Boi you just spamming at that point')
-    elif '@' in content:
-        await ctx.send('Dont @ me bro')
+            while(i>0):
+                await member.edit(mute=True)
+                time.sleep(0.25)
+                await member.edit(mute=False)
+                time.sleep(0.25)
+                i -= 1
+        except:
+            print("Didnt work")
     else:
-        for i in range(times):
-            await ctx.send(content)
+        await ctx.send("God.....")
+@bot.command()
+async def spinCycle(ctx, UID:int):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936):
+        try:
+            member = None
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            channels = []
+            for channel in ctx.message.guild.voice_channels:
+                channels.append(channel)
+            random.shuffle(channels)
+            for channel in channels:
+                await member.edit(voice_channel=channel)
+                time.sleep(0.25)
+            channels.reverse()
+            for channel in channels:
+                await member.edit(voice_channel=channel)
+                time.sleep(0.25)
+        except Exception as e:
+            print(e)
+            print("Didnt work")
+    else:
+        await ctx.send("Okay retard... You wanted the funny...")
+        member = None
+        for u in ctx.guild.members:
+            if(int(u.id) == ctx.message.author.id):
+                member = u
+                break
+        channels = []
+        for channel in ctx.message.guild.voice_channels:
+            channels.append(channel)
+        random.shuffle(channels)
+        for channel in channels:
+            await member.edit(voice_channel=channel)
+            time.sleep(0.25)
+        channels.reverse()
+        for channel in channels:
+            await member.edit(voice_channel=channel)
+            time.sleep(0.25)
 
 @bot.command()
-async def joined(ctx, member: discord.Member):
-    """Says when a member joined."""
-    await ctx.send('{0.name} joined in {0.joined_at}'.format(member))
+async def clown(ctx):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032):
+        try:
+            members = []
+            for channel in ctx.guild.voice_channels:
+                for member in channel.members:
+                    members.append(member)
+            channels = []
+            for channel in ctx.message.guild.voice_channels:
+                channels.append(channel)
 
-def checkDir(requestDirName: str, approvedDirName: str, bannerDirName: str) :
-    # Create target Directory if don't exist
-    for path in [requestDirName, approvedDirName, bannerDirName] :
-        if not os.path.exists(path):
-            os.mkdir(path)
-            print("Directory " , path ,  " Created ")
-        else:    
-            print("Directory " , path,  " already exists")
+            randomChannels = channels
 
-#### This is the weird stuff ###
-def renameQueued(serverID):
-    queueUpApproved = dbApprovedBanner[str(serverID)]
-    inApprovedDB = queueUpApproved.find()
+            for member in members:
+                random.shuffle(channels)
+                randomChannels = channels
+                for channel in randomChannels:
+                    await member.edit(voice_channel=channel)
+                    time.sleep(0.15)
+            randomChannel = random.choice(channels)
+            for member in members:
+                await member.edit(voice_channel=randomChannel)
+            await ctx.send("You've all been clowned! Have a good day in " + randomChannel)
 
-    queueUpRequests = dbRequestBanner[str(serverID)]
-    inRequestDB = queueUpRequests.find()
 
-    print()
-
-    number = 0
-    for request in inRequestDB:
-        oldValue = {'File Number' : request['File Number']}
-        newValue = { '$set': { 'File Number': int(number)}}
-        queueUpRequests.update_one(oldValue, newValue)
-        print("Updating" + oldValue + " with " + newValue)
-        number +=1
-    number = 0
-    for approval in inApprovedDB:
-        oldValue = {'File Number' : approval['File Number']}
-        newValue = { '$set': { 'File Number': int(number)}}
-        queueUpApproved.update_one(oldValue, newValue)
-        number +=1
-
-bot.run(dtoken)
+        except Exception as e:
+            print(e)
+            print("Didnt work")
+    else:
+        await ctx.send("Fucking clown")
+        await ctx.send("Imagine being you rn")
+@bot.command()
+async def simp(ctx, CID:int, MID:int):
+    if(ctx.author.id == 380801506137473034):
+        try:
+            for channel in ctx.guild.channels:
+                if (channel.id == CID):
+                    msg = await channel.fetch_message(MID)
+                    await msg.delete()
+                    break
+            
+        except Exception as e:
+            print(e)
+    else:
+        await ctx.send("You literal simp oh my god shut up shut the hell up retard")
+@bot.command()
+async def seethe(ctx, CID:int, UID:int):
+    if(ctx.author.id == 380801506137473034):
+        try:
+            member = None
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            for channel in ctx.guild.channels:
+                if(channel.id == CID):
+                    await channel.set_permissions(member, send_messages=True)
+        except Exception as e:
+            print (e)
+    else:
+        await ctx.send("Cope")
