@@ -36,22 +36,69 @@ defaultFunnyCreditScore = 500
 defaultFunnyTransactions = 5
 defaultFunnyWage = 11
 
-@tasks.loop(minutes=1)
+@bot.command()
+async def resetFunny(ctx):
+    if(ctx.author.id == 380801506137473034):
+        try:
+            serverID = ctx.guild.id
+            queueUp = dbFirstBankOfFunny[str(serverID)]
+            inDb = queueUp.find()
+
+            for entry in inDb:
+                entryBalance = entry['Balance']
+                resetBal = entryBalance*-1
+                print(entry['User'])
+                print(entryBalance)
+                print(resetBal)
+                account = getAccount(entry['User ID'], serverID)
+                try:
+                    updateBalance(serverID, account, resetBal, False)
+                    account = getAccount(entry['User ID'], serverID)
+                    updateBalance(serverID, account, 100, False)
+                except:
+                    print("Failed updateBalance")
+                
+                account = getAccount(entry['User ID'], serverID)
+                entryWorked = account['Funny Worked']
+                resetWorked = (entryWorked+(entryWorked*-1))
+                try:
+                    updateFunnyWorked(serverID, account, resetWorked)
+                except:
+                    print("Failed update Funny Worked")          
+        except:
+            print("Failed")
+    else:
+        await ctx.send("Cringe-ass")
+
+@tasks.loop(hours=12)
 async def payday():
+
     for guild in bot.guilds:
         count = 0
+        print("--------------------------")
         print("Paycheck Summary: " + str(guild))
-        print("-------------")
+        
         for member in guild.members:
             if(checkIfAccountExists(member.id, guild.id)):
-                #logic
                 account = getAccount(member.id, guild.id)
+                wage = account['Funny Wage']
+                worked = account['Funny Worked']
+                paycheck = account['Funny Wage']*account['Funny Worked']
+
+                print("    ###########################")
+                print("          User: " + str(member))
+                print("    Funny Wage: " + str(wage))
+                print("    Funny Wage: " + str(worked))
+                print("      Paycheck: " + str(paycheck))
+
                 try:
-                    paycheck = account['Funny Wage']*2
                     #updateBalance(guild.id, account, paycheck, False)
-                    print("Updated " + member + "'s balance with a funny paycheck of " + paycheck)
+                    updateFunnyWorked(guild.id, account, account['Funny Worked']*-1)
+                    print("    Updated " + str(member) + "'s balance with a funny paycheck of " + str(paycheck))
+                    print("    ###########################")
                 except Exception as e:
-                    print("Unable to update " + member + "'s paycheck of " + paycheck)
+                    print("Unable to update " + str(member) + "'s paycheck of " + str(paycheck))
+        print("--------------------------")
 
 @bot.event
 async def on_ready():
@@ -581,7 +628,7 @@ async def charge(ctx, member: discord.Member, funnyBucks: str):
                     updateBalance(serverID, unfunnyAccount, int(funnyBucks)*-1, False)
                     updateBalance(serverID, userAccount, int(funnyBucks), True)
 
-                    if(int(funnyBucks) > 100):
+                    if(int(funnyBucks) > 20):
                         await ctx.send(ctx.message.author.name + " is charging " + str(member.name) + " a whopping " + funnyBucks + " funny bucks for being big cringe.")
                     else:
                         await ctx.send(ctx.message.author.name + " is charging " + str(member.name) + " " + funnyBucks + " funny bucks for that yikes comment.")
@@ -619,10 +666,10 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
                     updateBalance(serverID, funnyAccount, int(funnyBucks), False)
                     updateBalance(serverID, userAccount, int(funnyBucks)*-1, True)
 
-                    if(int(funnyBucks) > 100):
+                    if(int(funnyBucks) > 20):
                         await ctx.send(ctx.message.author.name + " is giving " + str(member.name) + " a whopping " + funnyBucks + " funny bucks for making the whole squad laugh.")
                     else:
-                        await ctx.send(ctx.message.author.name + " is giving " + str(member.name) + " " + funnyBucks + " of his own hard-earned funny bucks for at least trying.")
+                        await ctx.send(ctx.message.author.name + " is giving " + str(member.name) + " " + funnyBucks + " funny for the nose-exhale.")
             else:
                 await ctx.send("That user does not yet have a First Bank of Funny account. They will need to `!createFunnyAccount` before you can reward them for being funny!")
         except Exception as e:
@@ -677,7 +724,10 @@ def updateFunnyWorked(serverID, account, funnyWorked: int):
     worked = int(account['Funny Worked'])
     newWorked = {"$set": {'Funny Worked': worked+funnyWorked}}
 
-    queueUp.find_one_and_update(query, newWorked)
+    try:  
+        queueUp.find_one_and_update(query, newWorked)
+    except Exception as e:
+        print(e)
 
 def checkIfAccountHasAllFields(serverID, account):
     queueUp = dbFirstBankOfFunny[str(serverID)].find(account)
