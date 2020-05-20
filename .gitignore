@@ -102,8 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
-ClownBot Py/config.json
-ClownBot Py/image_name.jpg
-ClownBot Py/bannerCommandFolder
-ClownBot Py/botQueueApproved
-ClownBot Py/botQueueAwaiting
+ClownBotPy/config.json
+ClownBotPy/image_name.jpg
+ClownBotPy/bannerCommandFolder
+ClownBotPy/botQueueApproved
+ClownBotPy/botQueueAwaiting

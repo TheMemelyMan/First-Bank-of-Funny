@@ -939,4 +939,9 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
 
 
 # RUNS BOT #
-bot.run(dtoken)
+def run():
+    bot.run(dtoken)
+
+
+if __name__ == "__main__":
+    run()
