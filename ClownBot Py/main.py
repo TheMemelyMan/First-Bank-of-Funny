@@ -1,16 +1,9 @@
 import discord
-from discord.ext import commands
-from discord.utils import get
-import os, random
+import random
 import json
-from discord.ext.commands import has_permissions, MissingPermissions
-from discord.ext.commands import has_permissions, CheckFailure
 from discord.ext import tasks, commands
 from pymongo import MongoClient
 import time
-import threading
-import time
-import ffmpeg
 import asyncio
 
 with open("config.json") as f:
@@ -78,14 +71,18 @@ async def resetFunny(ctx):
 @tasks.loop(hours=6)
 async def transReset():
     for guild in bot.guilds:
-        count = 0
         for member in guild.members:
             if checkIfAccountExists(member.id, guild.id):
                 account = getAccount(member.id, guild.id)
                 try:
                     updateTransactions(guild.id, account)
                 except Exception as e:
-                    print("Unable to update trans for " + str(member))
+                    print(
+                        "Unable to update trans for "
+                        + str(member)
+                        + ". Reason:\n"
+                        + e
+                    )
         print("--------------------------")
 
 
@@ -93,7 +90,6 @@ async def transReset():
 async def payday():
 
     for guild in bot.guilds:
-        count = 0
         print("--------------------------")
         print("Paycheck Summary: " + str(guild))
 
@@ -123,7 +119,7 @@ async def payday():
                         + str(paycheck)
                     )
                     print("    ###########################")
-                except Exception as e:
+                except Exception:
                     print(
                         "Unable to update "
                         + str(member)
@@ -188,7 +184,6 @@ async def on_message(message):
     # if(userID == 103702122251436032): #Sto
     # if(userID == 213829514818486272): #Ashy
     if userID == 148209473373208577:  # Phanact
-        # if(userID == 195037602892480513 or userID == 288096609542340610 or userID == 304377552754049025): #Crunchy or Wrong White or Kip
         clown = message.channel
         if message.attachments:
             await clown.send(message.attachments[0].url)
@@ -209,9 +204,9 @@ async def on_message(message):
         "User ID": userID,
     }
     try:
-        new_result = posts.insert_one(post_data)
-    except:
-        print("Did not post to DB successfully")
+        _ = posts.insert_one(post_data)
+    except Exception as e:
+        print("Did not post to DB successfully. Reason:\n" + e)
 
     await bot.process_commands(message)
 
@@ -308,22 +303,26 @@ async def commandHelp(ctx):
 
     embed = discord.Embed(title="Command Help")
     embed.set_thumbnail(
-        url="https://cdn.discordapp.com/attachments/387432001180925953/591601803033051136/hcc-avatar.png"
+        url="https://cdn.discordapp.com/attachments"
+        + "/387432001180925953/591601803033051136/hcc-avatar.png"
     )
 
     embed.add_field(
         name="!getShare",
-        value="Posts a link to a voice chat you are in for screen sharing and webcam calls",
+        value="Posts a link to a voice chat you are in"
+        + " for screen sharing and webcam calls",
         inline=False,
     )
     embed.add_field(
         name="!requestBanner <image link> <name (one word)>",
-        value="Sends banners off to a queue for admins to double check before putting them into an approved queue",
+        value="Sends banners off to a queue for admins"
+        + " to double check before putting them into an approved queue",
         inline=False,
     )
     embed.add_field(
         name="!displayBannerQueue",
-        value="Displays both the request banner queue and the mod approved queue",
+        value="Displays both the request banner"
+        + " queue and the mod approved queue",
         inline=False,
     )
     embed.add_field(
@@ -337,7 +336,8 @@ async def commandHelp(ctx):
 
 @bot.command()
 async def getShare(ctx):
-    """Posts a link to a voice chat you are in for screen sharing and webcam calls"""
+    """Posts a link to a voice chat you
+    are in for screen sharing and webcam calls"""
     if ctx.message.author.voice.channel is not None:
         voiceChannelName = str(
             ctx.guild.get_channel(ctx.message.author.voice.channel.id)
@@ -353,7 +353,8 @@ async def getShare(ctx):
         )
         embed.set_author(name=commanderName)
         embed.set_thumbnail(
-            url="https://cdn.discordapp.com/attachments/229820513738948609/590028508147744798/sig-4036785.png"
+            url="https://cdn.discordapp.com/attachments"
+            + "/229820513738948609/590028508147744798/sig-4036785.png"
         )
         embed.add_field(
             name="Current Voice Chat: " + voiceChannelName,
@@ -435,8 +436,8 @@ async def shutTheFuckUp(ctx, UID: int):
         try:
             member = ctx.guild.get_member(UID)
             await member.edit(mute=True)
-        except:
-            print("Didnt work")
+        except Exception as e:
+            print("Didnt work. Reason:\n" + e)
     else:
         await ctx.send("God.....")
 
@@ -451,8 +452,8 @@ async def wakeTheFuckUp(ctx, UID: int):
         try:
             member = ctx.guild.get_member(UID)
             await member.edit(mute=False)
-        except:
-            print("Didnt work")
+        except Exception as e:
+            print("Didnt work. Reason:\n" + e)
     else:
         await ctx.send("God.....")
 
@@ -581,7 +582,6 @@ async def seethe(ctx, CID: int, UID: int):
 @bot.command()
 async def repeat(ctx, times: int, content: str):
     """Repeats a message multiple times."""
-    # if(ctx.author.id != 472076407187570688 or ctx.author.id != 283681876357545984 or ctx.author.id != 265974172553838592):
     if ctx.author.id == 380801506137473034:
         if times > 150:
             await ctx.send("Boi you just spamming at that point")
@@ -599,7 +599,8 @@ async def repeat(ctx, times: int, content: str):
 async def funnyBankHelp(ctx):
     embed = discord.Embed(title="Funny Bank Menu")
     embed.set_thumbnail(
-        url="https://cdn.discordapp.com/attachments/629188664626380801/682792732993126433/emote.png"
+        url="https://cdn.discordapp.com/attachments"
+        + "/629188664626380801/682792732993126433/emote.png"
     )
 
     embed.add_field(
@@ -633,23 +634,22 @@ async def funnyBankHelp(ctx):
 
 @bot.command()
 async def account(ctx):
-    member = ctx.message.author
 
     ID = str(ctx.message.guild.id)
-    queueUp = dbFirstBankOfFunny[str(ID)]
-    inDb = queueUp.find()
     userID = ctx.message.author.id
-    found = checkIfAccountExists(userID, ID)
-    if found == False:
+    if not checkIfAccountExists(userID, ID):
         await ctx.send(
-            "You do not have a funny account! Make one with `!createFunnyAccount` to get started with First Bank of Funny today!"
+            "You do not have a funny account!"
+            + " Make one with `!createFunnyAccount`"
+            + " to get started with First Bank of Funny today!"
         )
     else:
         account = getAccount(userID, ID)
 
         embed = discord.Embed(title="Funny Bank Menu")
         embed.set_thumbnail(
-            url="https://cdn.discordapp.com/attachments/629188664626380801/682792732993126433/emote.png"
+            url="https://cdn.discordapp.com/attachments"
+            + "/629188664626380801/682792732993126433/emote.png"
         )
 
         embed.add_field(
@@ -692,13 +692,12 @@ async def balance(ctx):
     member = ctx.message.author
 
     ID = str(ctx.message.guild.id)
-    queueUp = dbFirstBankOfFunny[str(ID)]
-    inDb = queueUp.find()
     userID = ctx.message.author.id
-    found = checkIfAccountExists(userID, ID)
-    if found == False:
+    if not checkIfAccountExists(userID, ID):
         await ctx.send(
-            "You do not have a funny account! Make one with `!createFunnyAccount` to get started with First Bank of Funny today!"
+            "You do not have a funny account!"
+            + " Make one with `!createFunnyAccount`"
+            + " to get started with First Bank of Funny today!"
         )
     else:
         account = getAccount(userID, ID)
@@ -717,15 +716,10 @@ async def thenIllMakeAFriendshipProblem(ctx, member: discord.Member):
         ID = str(ctx.message.guild.id)
 
         user = member.name
-        channel = ctx.message.channel.name
-        messageURL = ctx.message.jump_url
-        messageID = ctx.message.id
         userID = member.id
 
-        accountExists = checkIfAccountExists(userID, ID)
-
         try:
-            if accountExists == False:
+            if not checkIfAccountExists(userID, ID):
                 queueUp = dbFirstBankOfFunny[str(ID)]
                 post_data = {
                     "User": user,
@@ -750,7 +744,8 @@ async def thenIllMakeAFriendshipProblem(ctx, member: discord.Member):
             else:
                 account = getAccount(userID, ID)
                 await ctx.send(
-                    "You already have a funny account. Im taking away 1 funny buck for that......."
+                    "You already have a funny account."
+                    + " Im taking away 1 funny buck for that......."
                 )
                 updateBalance(ID, account, -1, False)
 
@@ -768,16 +763,11 @@ async def createFunnyAccount(ctx):
     ID = str(ctx.message.guild.id)
 
     user = ctx.message.author.name
-    channel = ctx.message.channel.name
-    messageURL = ctx.message.jump_url
-    messageID = ctx.message.id
     userID = ctx.message.author.id
     member = ctx.message.author
 
-    accountExists = checkIfAccountExists(userID, ID)
-
     try:
-        if accountExists == False:
+        if not checkIfAccountExists(userID, ID):
             queueUp = dbFirstBankOfFunny[str(ID)]
             post_data = {
                 "User": user,
@@ -802,7 +792,8 @@ async def createFunnyAccount(ctx):
         else:
             account = getAccount(userID, ID)
             await ctx.send(
-                "You already have a funny account. Im taking away 1 funny buck for that......."
+                "You already have a funny account."
+                + " Im taking away 1 funny buck for that......."
             )
             updateBalance(ID, account, -1, False)
 
@@ -821,7 +812,8 @@ async def charge(ctx, member: discord.Member, funnyBucks: str):
         await ctx.send("Who are you really helping here...?")
     elif int(funnyBucks) > 50:
         await ctx.send(
-            "That amount is too high for personal transactions. Limit for personal transactions is 50 Funny"
+            "That amount is too high for personal transactions."
+            + " Limit for personal transactions is 50 Funny"
         )
     else:
         try:
@@ -841,7 +833,9 @@ async def charge(ctx, member: discord.Member, funnyBucks: str):
 
                 if userAccount["Daily Funny Transactions"] <= 0:
                     await ctx.send(
-                        "You do not have a sufficient amount of daily transactions available to charge for this funny. Use `!account` to check that number."
+                        "You do not have a sufficient amount of daily"
+                        + " transactions available to charge for this funny."
+                        + " Use `!account` to check that number."
                     )
                 else:
                     updateBalance(
@@ -871,7 +865,9 @@ async def charge(ctx, member: discord.Member, funnyBucks: str):
                         )
             else:
                 await ctx.send(
-                    "That user does not yet have a First Bank of Funny account. They will need to `!createFunnyAccount` before you can charge them for being unfunny!"
+                    "That user does not yet have a First Bank of Funny"
+                    + " account. They will need to `!createFunnyAccount`"
+                    + " before you can charge them for being unfunny!"
                 )
         except Exception as e:
             await ctx.send("Something went wrong...")
@@ -888,7 +884,8 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
         await ctx.send("Who are you really helping here...?")
     elif int(funnyBucks) > 50:
         await ctx.send(
-            "That amount is too high for personal transactions. Limit for personal transactions is 50 Funny"
+            "That amount is too high for personal transactions."
+            + " Limit for personal transactions is 50 Funny"
         )
     else:
         try:
@@ -908,7 +905,9 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
 
                 if userAccount["Daily Funny Transactions"] <= 0:
                     await ctx.send(
-                        "You do not have a sufficient amount of daily transactions available to charge for this funny. Use `!account` to check that number."
+                        "You do not have a sufficient amount of daily"
+                        + " transactions available to charge for this funny."
+                        + " Use `!account` to check that number."
                     )
                 else:
                     updateBalance(
@@ -938,7 +937,9 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
                         )
             else:
                 await ctx.send(
-                    "That user does not yet have a First Bank of Funny account. They will need to `!createFunnyAccount` before you can reward them for being funny!"
+                    "That user does not yet have a First Bank of Funny"
+                    + " account. They will need to `!createFunnyAccount` "
+                    + "before you can reward them for being funny!"
                 )
         except Exception as e:
             await ctx.send("Something went wrong...")
@@ -1019,7 +1020,8 @@ def checkIfAccountHasAllFields(serverID, account):
         for key in keys:
             if key not in document.keys():
                 try:
-                    # print("Got to checkIfAccountHasAllFields where key was not in document.keys(). Key:  " + str(key))
+                    # print("Got to checkIfAccountHasAllFields where"
+                    # + " key was not in document.keys(). Key:  " + str(key))
                     newValue = {
                         "$set": {
                             str(key): calcNewDefaultForMissingField(
@@ -1032,7 +1034,7 @@ def checkIfAccountHasAllFields(serverID, account):
                     print(e)
 
 
-##################################### Field Updater Methods ########################################################################
+# Field Updater Methods
 def getAccountKeys():
     return [
         "_id",
