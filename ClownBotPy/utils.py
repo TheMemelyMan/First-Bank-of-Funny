@@ -5,31 +5,28 @@ from db import dbFirstBankOfFunny
 defaultFunnyCreditScore = 500
 defaultFunnyTransactions = 5
 defaultFunnyWage = 11
+account_keys = [
+    "_id",
+    "User",
+    "User ID",
+    "Balance",
+    "Funny Credit Score",
+    "Daily Funny Transactions",
+    "Funny Wage",
+    "Funny Worked",
+]
 
 
 def getAccount(userID, serverID):
     queueUp = dbFirstBankOfFunny[str(serverID)]
-    inDb = queueUp.find()
-
-    for account in inDb:
-        if account["User ID"] == int(userID):
-            checkIfAccountHasAllFields(serverID, account)
-
-    queueUp = dbFirstBankOfFunny[str(serverID)]
-    inDbAfterCheck = queueUp.find()
-    for account in inDbAfterCheck:
-        if account["User ID"] == int(userID):
-            return account
+    account = queueUp.find_one({"User ID": userID})
+    if account:
+        checkIfAccountHasAllFields(serverID, account)
+    return account
 
 
 def checkIfAccountExists(userID, serverID):
-    queueUp = dbFirstBankOfFunny[str(serverID)]
-    inDb = queueUp.find()
-    exists = False
-    for entry in inDb:
-        if entry["User ID"] == int(userID):
-            return True
-    return exists
+    return getAccount(userID, serverID) is not None
 
 
 def updateBalance(
@@ -72,40 +69,21 @@ def updateFunnyWorked(serverID, account, funnyWorked: int):
 
 
 def checkIfAccountHasAllFields(serverID, account):
-    queueUp = dbFirstBankOfFunny[str(serverID)].find(account)
     cursor = dbFirstBankOfFunny[str(serverID)]
-    keys = getAccountKeys()
+    keys = account_keys
     query = {"_id": account["_id"]}
-    for document in queueUp:
-        for key in keys:
-            if key not in document.keys():
-                try:
-                    # print("Got to checkIfAccountHasAllFields where"
-                    # + " key was not in document.keys(). Key:  " + str(key))
-                    newValue = {
-                        "$set": {
-                            str(key): calcNewDefaultForMissingField(
-                                account, keys.index(key)
-                            )
-                        }
-                    }
-                    cursor.find_one_and_update(query, newValue)
-                except Exception as e:
-                    print(e)
-
-
-# Field Updater Methods
-def getAccountKeys():
-    return [
-        "_id",
-        "User",
-        "User ID",
-        "Balance",
-        "Funny Credit Score",
-        "Daily Funny Transactions",
-        "Funny Wage",
-        "Funny Worked",
-    ]
+    to_add = {}
+    for key in keys:
+        if key not in account.keys():
+            to_add[str(key)] = calcNewDefaultForMissingField(
+                account, keys.index(key)
+            )
+    if to_add is not {}:
+        try:
+            newValue = {"$set": to_add}
+            cursor.find_one_and_update(query, newValue)
+        except Exception as e:
+            print(e)
 
 
 def calcNewDefaultForMissingField(account, key):
