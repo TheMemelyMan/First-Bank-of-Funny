@@ -1,11 +1,12 @@
 import discord
 import random
-from config import configData
 from discord.ext import tasks, commands
 import time
 import asyncio
-from db import dbDiscord, dbFirstBankOfFunny
-from utils import (
+
+from ClownBotPy import configData
+from ClownBotPy.db import dbDiscord, dbFirstBankOfFunny
+from ClownBotPy.utils import (
     getAccount,
     updateBalance,
     checkIfAccountExists,

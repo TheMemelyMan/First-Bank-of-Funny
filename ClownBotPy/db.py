@@ -1,4 +1,4 @@
-from config import configData
+from ClownBotPy import configData
 from pymongo import MongoClient
 
 mongoPath = configData["tokens"][0]["mongoPath"]
