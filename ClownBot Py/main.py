@@ -406,7 +406,7 @@ async def wakeTheFuckUp(ctx, UID: int):
             print("Didnt work")
     else:
         await ctx.send("God.....")
-        
+
 @bot.command(name="spinCycle")
 async def spinCycle(ctx, UID: int):
     if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936 or ctx.author.id == 96799634948640768):
@@ -454,16 +454,22 @@ async def voiceTestJoin(ctx, UID: int):
     channel = ctx.author.voice.channel
     await channel.connect()
 
-@bot.command(name="voiceTestLeave")
-async def voiceTestLeave(ctx):
+@bot.command(name="voiceLeave")
+async def voiceLeave(ctx):
     await ctx.voice_client.disconnect()
 
-@bot.command(name="voiceTestPlay")
-async def voiceTestPlay(ctx):
+@bot.command(name="bop")
+async def bop(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/world.mp3")
+    dir = "./sound/" + str(random.choice(os.listdir("./sound/")))
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
     voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+    
 
 @bot.command()
 async def clown(ctx):
