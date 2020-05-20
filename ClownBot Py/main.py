@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.utils import get
-import random
+import os, random
 import json
 from discord.ext.commands import has_permissions, MissingPermissions
 from discord.ext.commands import has_permissions, CheckFailure
@@ -10,7 +10,7 @@ from pymongo import MongoClient
 import time
 import threading
 import time
-from discord.voice_client import VoiceClient
+import ffmpeg
 
 with open('config.json') as f:
     configData = json.load(f)
@@ -69,6 +69,18 @@ async def resetFunny(ctx):
             print("Failed")
     else:
         await ctx.send("Cringe-ass")
+@tasks.loop(hours=6)
+async def transReset():
+    for guild in bot.guilds:
+        count = 0
+        for member in guild.members:
+            if(checkIfAccountExists(member.id, guild.id)):
+                account = getAccount(member.id, guild.id)
+                try:
+                    updateTransactions(guild.id, account)
+                except Exception as e:
+                    print("Unable to update trans for " + str(member))
+        print("--------------------------")
 
 @tasks.loop(hours=12)
 async def payday():
@@ -92,8 +104,9 @@ async def payday():
                 print("      Paycheck: " + str(paycheck))
 
                 try:
-                    #updateBalance(guild.id, account, paycheck, False)
+                    updateBalance(guild.id, account, paycheck, False)
                     updateFunnyWorked(guild.id, account, account['Funny Worked']*-1)
+                    #updateTransactions(guild.id, account)
                     print("    Updated " + str(member) + "'s balance with a funny paycheck of " + str(paycheck))
                     print("    ###########################")
                 except Exception as e:
@@ -107,6 +120,7 @@ async def on_ready():
     print(bot.user.id)
     print('------')
     payday.start()
+    transReset.start()
 
 """logging"""
 @bot.event
@@ -137,6 +151,29 @@ async def on_message(message):
     messageURL = message.jump_url
     messageID = message.id
     userID = message.author.id
+
+    serverEmojis = []
+
+    for emoji in message.guild.emojis:
+        serverEmojis.append(emoji)
+
+    random.shuffle(serverEmojis)
+
+    #if(userID == 288096609542340610): #Wrong White
+    #if(userID == 380801506137473034): #Memely
+    #if(userID == 472076407187570688): #Rarity Rover
+    #if(userID == 103702122251436032): #Sto
+    #if(userID == 213829514818486272): #Ashy
+    if(userID == 148209473373208577): #Phanact
+    #if(userID == 195037602892480513 or userID == 288096609542340610 or userID == 304377552754049025): #Crunchy or Wrong White or Kip
+        clown = message.channel
+        if(message.attachments):
+            await clown.send(message.attachments[0].url)
+        elif("http" in content or "www." in content):
+            await clown.send(content)
+        else:
+            await clown.send("`"+ content +"`")
+        await clown.send(str(serverEmojis[0]))
 
     posts = dbDiscord[ID]
 
@@ -325,7 +362,7 @@ async def goon(ctx, UID: int):
                 if(int(u.id) == UID):
                     member = u
                     break
-            i = 15
+            i = 10
 
             while(i > 0):
                 await member.edit(mute=True)
@@ -338,10 +375,41 @@ async def goon(ctx, UID: int):
     else:
         await ctx.send("God.....")
 
+@bot.command()
+async def shutTheFuckUp(ctx, UID: int):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936):
+        try:
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            i = 15
+
+            await member.edit(mute=True)
+        except:
+            print("Didnt work")
+    else:
+        await ctx.send("God.....")
 
 @bot.command()
-async def spinCycle(ctx, UID: int):
+async def wakeTheFuckUp(ctx, UID: int):
     if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936):
+        try:
+            for u in ctx.guild.members:
+                if(int(u.id) == UID):
+                    member = u
+                    break
+            i = 15
+
+            await member.edit(mute=False)
+        except:
+            print("Didnt work")
+    else:
+        await ctx.send("God.....")
+        
+@bot.command(name="spinCycle")
+async def spinCycle(ctx, UID: int):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936 or ctx.author.id == 96799634948640768):
         try:
             member = None
             for u in ctx.guild.members:
@@ -381,10 +449,25 @@ async def spinCycle(ctx, UID: int):
             await member.edit(voice_channel=channel)
             time.sleep(0.25)
 
+@bot.command(name="voiceTestJoin")
+async def voiceTestJoin(ctx, UID: int):
+    channel = ctx.author.voice.channel
+    await channel.connect()
+
+@bot.command(name="voiceTestLeave")
+async def voiceTestLeave(ctx):
+    await ctx.voice_client.disconnect()
+
+@bot.command(name="voiceTestPlay")
+async def voiceTestPlay(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/world.mp3")
+    voice.play(source)
 
 @bot.command()
 async def clown(ctx):
-    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032):
+    if(ctx.author.id == 380801506137473034):
         try:
             members = []
             for channel in ctx.guild.voice_channels:
@@ -396,10 +479,7 @@ async def clown(ctx):
 
             randomChannels = channels
 
-            for member in members:
-                random.shuffle(channels)
-                randomChannels = channels
-                for channel in randomChannels:
+            for channel in randomChannels:
                     await member.edit(voice_channel=channel)
                     time.sleep(0.15)
             randomChannel = random.choice(channels)
@@ -448,7 +528,22 @@ async def seethe(ctx, CID: int, UID: int):
     else:
         await ctx.send("Faggot")
 
-
+@bot.command()
+async def repeat(ctx, times: int, content: str):
+    """Repeats a message multiple times."""
+    #if(ctx.author.id != 472076407187570688 or ctx.author.id != 283681876357545984 or ctx.author.id != 265974172553838592):
+    if(ctx.author.id == 380801506137473034):
+        if times > 150:
+            await ctx.send('Boi you just spamming at that point')
+        # elif '@' in content:
+        #     await ctx.send('Dont @ me bro')
+        else:
+            for i in range(times):
+                await ctx.send(content)
+    else:
+        for i in range(times):
+            await ctx.send("Sorry, autism detected, please stop")
+    
 @bot.command()
 async def funnyBankHelp(ctx):
     embed = discord.Embed(title="Funny Bank Menu")
@@ -716,6 +811,14 @@ def updateBalance(serverID, account, balanceDiff: int, countsAsTransaction: bool
         queueUp.find_one_and_update(query, newTrans)
 
     queueUp.find_one_and_update(query, newBalance)
+
+def updateTransactions(serverID, account):
+    queueUp = dbFirstBankOfFunny[str(serverID)]
+
+    query = {'_id': account['_id']}
+    newTrans = {"$set": {'Daily Funny Transactions': 5}}
+
+    queueUp.find_one_and_update(query, newTrans)
 
 def updateFunnyWorked(serverID, account, funnyWorked: int):
     queueUp = dbFirstBankOfFunny[str(serverID)]
