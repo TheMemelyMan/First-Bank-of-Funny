@@ -490,25 +490,62 @@ async def spinCycle(ctx, UID: int):
             time.sleep(0.25)
 
 
-@bot.command(name="voiceTestJoin")
-async def voiceTestJoin(ctx, UID: int):
+@bot.command(name="bap")
+async def bap(ctx, times: int):
     channel = ctx.author.voice.channel
-    await channel.connect()
+    if times > 5 and times < 69:
+        await ctx.send("Too many times, fuckhead, 5 is the max")
+    elif times == 69:
+        await ctx.send("Alright, that was kinda funny lol")
+        await bop(ctx)
+    else:
+        while times > 0:
+            voice = await channel.connect()
+            await voiceLeave(ctx)
+            times -= 1
 
 
-@bot.command(name="voiceTestLeave")
-async def voiceTestLeave(ctx):
+@bot.command(name="voiceLeave")
+async def voiceLeave(ctx):
     await ctx.voice_client.disconnect()
 
-
-@bot.command(name="voiceTestPlay")
-async def voiceTestPlay(ctx):
+@bot.command(name="bop")
+async def bop(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    source = discord.FFmpegPCMAudio(
-        executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/world.mp3"
-    )
+    dir = "./sound/scat/" + str(random.choice(os.listdir("./sound/scat/")))
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
     voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="nerf")
+async def nerf(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/random/nerf.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="retard")
+async def retard(ctx, member: discord.Member, nick):
+    if(ctx.author.id == 380801506137473034):
+        await member.edit(nick=nick)
+    else:
+        await ctx.send("Lol nah")
+# @bot.command(name="bopStep")
+# async def bopStep(ctx, times: int):
+#     if times > 4:
+#         await ctx.send("Cant bop that hard bro. 4 bops allowed")
+#     else:
+#         while times > 0:
+#             await bop(ctx)
+#             times -= 1
 
 
 @bot.command()
