@@ -36,6 +36,9 @@ defaultFunnyCreditScore = 500
 defaultFunnyTransactions = 5
 defaultFunnyWage = 11
 
+# RUNS BOT #
+bot.run(dtoken)
+
 @bot.command()
 async def resetFunny(ctx):
     if(ctx.author.id == 380801506137473034):
@@ -125,7 +128,6 @@ async def on_ready():
 """logging"""
 @bot.event
 async def on_message(message):
-
     print(f"Message Content:\n{message.content}")
     try:
         print(message.attachments[0].url)
@@ -159,12 +161,33 @@ async def on_message(message):
 
     random.shuffle(serverEmojis)
 
+    if(("riot" in content or "RIOT" in content) and message.author.id != 574837702734774282):
+        if(message.channel.id == 229820513738948609):
+            i = 3
+            await message.channel.send("🔥🔥🔥🔥🔥")
+            while i>0:
+                await message.channel.send("NATIONAL RIOT")
+                i -= 1
+            await message.channel.send("🔥🔥🔥🔥🔥")
+        else:
+            await message.channel.send("NATIONAL RIOT")
+
+    responses = ["Shut the fuck up, Dadbot... These are my kids now...",
+    "Wow dude...", "Shut the fuck up, Dadbot",
+    "Are you still talking?",
+    "BA BO BE",
+    "That's illegal",
+    "That wasn't funny...",
+    "Ok retard",
+    "Okay... But who asked...?",
+    "10 years too late, Dadbot, 10... fucking... years..."]
+
     #if(userID == 288096609542340610): #Wrong White
     #if(userID == 380801506137473034): #Memely
-    #if(userID == 472076407187570688): #Rarity Rover
+    if(userID == 472076407187570688): #Rarity Rover
     #if(userID == 103702122251436032): #Sto
     #if(userID == 213829514818486272): #Ashy
-    if(userID == 148209473373208577): #Phanact
+    #if(userID == 148209473373208577 or userID == 472076407187570688): #Phanact and rover
     #if(userID == 195037602892480513 or userID == 288096609542340610 or userID == 304377552754049025): #Crunchy or Wrong White or Kip
         clown = message.channel
         if(message.attachments):
@@ -174,6 +197,8 @@ async def on_message(message):
         else:
             await clown.send("`"+ content +"`")
         await clown.send(str(serverEmojis[0]))
+    if(userID == 247852652019318795):
+        await message.channel.send(random.choice(responses))
 
     posts = dbDiscord[ID]
 
@@ -356,7 +381,7 @@ async def unfunny(ctx, UID: int, role: str):
 
 @bot.command()
 async def goon(ctx, UID: int):
-    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936):
+    if(ctx.author.id == 380801506137473034 or ctx.author.id == 103702122251436032 or ctx.author.id == 458425335227088936 or ctx.author.id == 96799634948640768):
         try:
             for u in ctx.guild.members:
                 if(int(u.id) == UID):
@@ -449,10 +474,20 @@ async def spinCycle(ctx, UID: int):
             await member.edit(voice_channel=channel)
             time.sleep(0.25)
 
-@bot.command(name="voiceTestJoin")
-async def voiceTestJoin(ctx, UID: int):
+@bot.command(name="bap")
+async def bap(ctx, times: int):
     channel = ctx.author.voice.channel
-    await channel.connect()
+    if times > 5 and times < 69:
+        await ctx.send("Too many times, fuckhead, 5 is the max")
+    elif times == 69:
+        await ctx.send("Alright, that was kinda funny lol")
+        await bop(ctx)
+    else:
+        while times > 0:
+            voice = await channel.connect()
+            await voiceLeave(ctx)
+            times -= 1
+
 
 @bot.command(name="voiceLeave")
 async def voiceLeave(ctx):
@@ -462,13 +497,39 @@ async def voiceLeave(ctx):
 async def bop(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    dir = "./sound/" + str(random.choice(os.listdir("./sound/")))
+    dir = "./sound/scat/" + str(random.choice(os.listdir("./sound/scat/")))
     source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
     voice.play(source)
     while True:
       if not voice.is_playing():
         await voiceLeave(ctx)
         break
+
+@bot.command(name="nerf")
+async def nerf(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/random/nerf.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="retard")
+async def retard(ctx, member: discord.Member, nick):
+    if(ctx.author.id == 380801506137473034):
+        await member.edit(nick=nick)
+    else:
+        await ctx.send("Lol nah")
+# @bot.command(name="bopStep")
+# async def bopStep(ctx, times: int):
+#     if times > 4:
+#         await ctx.send("Cant bop that hard bro. 4 bops allowed")
+#     else:
+#         while times > 0:
+#             await bop(ctx)
+#             times -= 1
     
 
 @bot.command()
@@ -539,7 +600,7 @@ async def repeat(ctx, times: int, content: str):
     """Repeats a message multiple times."""
     #if(ctx.author.id != 472076407187570688 or ctx.author.id != 283681876357545984 or ctx.author.id != 265974172553838592):
     if(ctx.author.id == 380801506137473034):
-        if times > 150:
+        if times > 50:
             await ctx.send('Boi you just spamming at that point')
         # elif '@' in content:
         #     await ctx.send('Dont @ me bro')
@@ -547,8 +608,7 @@ async def repeat(ctx, times: int, content: str):
             for i in range(times):
                 await ctx.send(content)
     else:
-        for i in range(times):
-            await ctx.send("Sorry, autism detected, please stop")
+        await ctx.send("Sorry, autism detected, please stop")
     
 @bot.command()
 async def funnyBankHelp(ctx):
@@ -872,6 +932,3 @@ def calcNewDefaultForMissingField(account, key):
         7: 0
     }
     return defaults[key]
-
-# RUNS BOT #
-bot.run(dtoken)
