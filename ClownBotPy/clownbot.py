@@ -1,8 +1,12 @@
 import discord
 import random
 from discord.ext import tasks, commands
+from discord.utils import get
 import time
 import asyncio
+import time
+import threading
+import time
 
 from ClownBotPy import configData
 from ClownBotPy.db import dbDiscord, dbFirstBankOfFunny
@@ -14,6 +18,7 @@ from ClownBotPy.utils import (
     updateFunnyWorked,
     checkIfAccountHasAllFields,
 )
+import os
 
 
 prefix = configData["information"][0]["prefix"]
@@ -170,20 +175,84 @@ async def on_message(message):
 
     random.shuffle(serverEmojis)
 
-    # if(userID == 288096609542340610): #Wrong White
-    # if(userID == 380801506137473034): #Memely
-    # if(userID == 472076407187570688): #Rarity Rover
-    # if(userID == 103702122251436032): #Sto
-    # if(userID == 213829514818486272): #Ashy
-    if userID == 148209473373208577:  # Phanact
-        clown = message.channel
-        if message.attachments:
-            await clown.send(message.attachments[0].url)
-        elif "http" in content or "www." in content:
-            await clown.send(content)
-        else:
+    if("cop" in content.casefold()
+    or "nigger" in content.casefold()
+    or "nigga" in content.casefold()
+    or "crime" in content.casefold()
+    or "black" in content.casefold()
+    or "drug" in content.casefold()
+    or "riot" in content.casefold()
+    or "triggered" in content.casefold()
+    or "seethe" in content.casefold()
+    or "cope" in content.casefold()
+    or "boot" in content.casefold()
+    or "argument" in content.casefold()
+    or "heroin" in content.casefold()
+    or "crack" in content.casefold()
+    or "libtard" in content.casefold()
+    or "autopsy" in content.casefold()
+    or "police" in content.casefold()
+    or "dance" in content.casefold()
+    or "dancing" in content.casefold()
+    or "dindu" in content.casefold()
+    or "riot" in content.casefold()):
+        randmember = random.choice(message.guild.members)
+        oldbotname = str(message.guild.get_member(bot.user.id).nick)
+        await message.guild.get_member(bot.user.id).edit(nick=randmember.name)
+        await message.channel.trigger_typing()
+        await asyncio.sleep(30)
+        await message.guild.get_member(bot.user.id).edit(nick="Deep State Rioter")
+
+
+    # if userID == 187063558037569536:  # Harry
+    #     clown = message.channel
+    #     if message.attachments:
+    #         await clown.send(message.attachments[0].url)
+    #     elif "http" in content or "www." in content:
+    #         await clown.send(content)
+    #     else:
+    #         await clown.send("`" + content + "`")
+    #     await clown.send(str(serverEmojis[0]))
+
+    randomLevel =[
+        "|====================|== 110%",
+        "|====================| 100%",
+        "|==================--| 90%",
+        "|================----| 80%",
+        "|==============------| 70%",
+        "|============--------| 60%",
+        "|==========----------| 50%",
+    ]
+    nick = "Fuck the police"
+    if userID == 187063558037569536:  # Harry
+        if message.author.nick != nick:
+            await message.guild.get_member(userID).edit(nick=nick)
+        
+        if("cop" in content.casefold()
+    or "nigger" in content.casefold()
+    or "nigga" in content.casefold()
+    or "crime" in content.casefold()
+    or "black" in content.casefold()
+    or "drug" in content.casefold()
+    or "riot" in content.casefold()
+    or "triggered" in content.casefold()
+    or "seethe" in content.casefold()
+    or "cope" in content.casefold()
+    or "boot" in content.casefold()
+    or "argument" in content.casefold()
+    or "heroin" in content.casefold()
+    or "crack" in content.casefold()
+    or "libtard" in content.casefold()
+    or "autopsy" in content.casefold()
+    or "police" in content.casefold()
+    or "dance" in content.casefold()
+    or "dindu" in content.casefold()
+    or "riot" in content.casefold()):
+            clown = message.channel
             await clown.send("`" + content + "`")
-        await clown.send(str(serverEmojis[0]))
+            await clown.send("Take retard level")
+            await clown.send("`" + str(random.choice(randomLevel)) + "`")
+
 
     posts = dbDiscord[ID]
 
@@ -288,7 +357,6 @@ async def on_raw_reaction_remove(RawReactionEvent):
         else:
             print("No funny account found")
             print("----------------------------------------------")
-
 
 @bot.command()
 async def commandHelp(ctx):
@@ -476,19 +544,26 @@ async def spinCycle(ctx, UID: int):
             print("Didnt work")
     else:
         await ctx.send("Okay retard... You wanted the funny...")
-        member = ctx.guild.get_member(ctx.message.authod.id)
-        channels = []
-        for channel in ctx.message.guild.voice_channels:
-            channels.append(channel)
-        random.shuffle(channels)
-        for channel in channels:
-            await member.edit(voice_channel=channel)
-            time.sleep(0.25)
-        channels.reverse()
-        for channel in channels:
-            await member.edit(voice_channel=channel)
-            time.sleep(0.25)
+        try:
+            member = ctx.guild.get_member(UID)
+            channels = []
+            for channel in ctx.message.guild.voice_channels:
+                channels.append(channel)
+            random.shuffle(channels)
+            for channel in channels:
+                await member.edit(voice_channel=channel)
+                time.sleep(0.25)
+            channels.reverse()
+            for channel in channels:
+                await member.edit(voice_channel=channel)
+                time.sleep(0.25)
+        except Exception as e:
+            print(e)
+            print("Didnt work")
 
+@bot.command(name="voiceLeave")
+async def voiceLeave(ctx):
+    await ctx.voice_client.disconnect()
 
 @bot.command(name="bap")
 async def bap(ctx, times: int):
@@ -504,16 +579,11 @@ async def bap(ctx, times: int):
             await voiceLeave(ctx)
             times -= 1
 
-
-@bot.command(name="voiceLeave")
-async def voiceLeave(ctx):
-    await ctx.voice_client.disconnect()
-
 @bot.command(name="bop")
 async def bop(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    dir = "./sound/scat/" + str(random.choice(os.listdir("./sound/scat/")))
+    dir = "./ClownBotPy/sound/scat/" + str(random.choice(os.listdir("./ClownBotPy/sound/scat/")))
     source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
     voice.play(source)
     while True:
@@ -521,11 +591,88 @@ async def bop(ctx):
         await voiceLeave(ctx)
         break
 
+@bot.command(name="combine", aliases=['halfLife', 'hl', 'chatter'])
+async def combine(ctx):
+    channel = ctx.author.voice.channel
+    count = 3
+    while count > 0:
+        voice = await channel.connect()
+        dir = "./ClownBotPy/sound/combine/soldier/" + str(random.choice(os.listdir("./ClownBotPy/sound/combine/soldier/")))
+        source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
+        voice.play(source)
+        while True:
+            if not voice.is_playing():
+                await voiceLeave(ctx)
+                count -= 1
+                break
+        asyncio.sleep(1)
+
+@bot.command(name="overwatch", aliases=['ow', 'city'])
+async def overwatch(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    count = 3
+    while count > 0:
+        dir = "./ClownBotPy/sound/combine/city/" + str(random.choice(os.listdir("./ClownBotPy/sound/combine/city/")))
+        source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
+        voice.play(source)
+        while True:
+            if not voice.is_playing():
+                count -= 1
+                break
+        asyncio.sleep(1)
+    await voiceLeave(ctx)
+        
+
+@bot.command(name="bob")
+async def bob(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/bob.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="yo", aliases=['yoo', 'yooo', 'yoooo'])
+async def yo(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/yo.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="burg", aliases=['burger', 'hamburger'])
+async def burg(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/burg.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+# @bot.command(name="square", aliases=['theShapeOfEvil', 'oog'])
+# async def square(ctx):
+#     channel = ctx.author.voice.channel
+#     voice = await channel.connect()
+#     source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/square.mp3")
+#     voice.play(source)
+#     while True:
+#       if not voice.is_playing():
+#         await voiceLeave(ctx)
+#         break
+
 @bot.command(name="nerf")
 async def nerf(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./sound/random/nerf.mp3")
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/nerf.mp3")
     voice.play(source)
     while True:
       if not voice.is_playing():
@@ -538,14 +685,6 @@ async def retard(ctx, member: discord.Member, nick):
         await member.edit(nick=nick)
     else:
         await ctx.send("Lol nah")
-# @bot.command(name="bopStep")
-# async def bopStep(ctx, times: int):
-#     if times > 4:
-#         await ctx.send("Cant bop that hard bro. 4 bops allowed")
-#     else:
-#         while times > 0:
-#             await bop(ctx)
-#             times -= 1
 
 
 @bot.command()
@@ -611,7 +750,7 @@ async def seethe(ctx, CID: int, UID: int):
 @bot.command()
 async def repeat(ctx, times: int, content: str):
     """Repeats a message multiple times."""
-    if ctx.author.id == 380801506137473034:
+    if ctx.author.id == 380801506137473034 or ctx.author.id == 96799634948640768:
         if times > 150:
             await ctx.send("Boi you just spamming at that point")
         # elif '@' in content:
@@ -620,8 +759,8 @@ async def repeat(ctx, times: int, content: str):
             for i in range(times):
                 await ctx.send(content)
     else:
-        for i in range(times):
-            await ctx.send("Sorry, autism detected, please stop")
+        await ctx.send("Sorry, riot detected, please stop resisting")
+                
 
 
 @bot.command()

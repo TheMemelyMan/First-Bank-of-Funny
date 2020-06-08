@@ -108,3 +108,4 @@ ClownBotPy/bannerCommandFolder
 ClownBotPy/botQueueApproved
 ClownBotPy/botQueueAwaiting
 config.json
+.vscode/settings.json
