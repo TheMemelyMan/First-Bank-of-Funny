@@ -7,6 +7,17 @@ import asyncio
 import time
 import threading
 import time
+import logging
+
+#Basic logging
+#logging.basicConfig(level=logging.INFO)
+
+#Advanced logging
+# logger = logging.getLogger('discord')
+# logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+# handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+# logger.addHandler(handler)
 
 from ClownBotPy import configData
 from ClownBotPy.db import dbDiscord, dbFirstBankOfFunny
@@ -65,65 +76,65 @@ async def resetFunny(ctx):
         await ctx.send("Cringe-ass")
 
 
-@tasks.loop(hours=6)
-async def transReset():
-    for guild in bot.guilds:
-        for member in guild.members:
-            if checkIfAccountExists(member.id, guild.id):
-                account = getAccount(member.id, guild.id)
-                try:
-                    updateTransactions(guild.id, account)
-                except Exception as e:
-                    print(
-                        "Unable to update trans for "
-                        + str(member)
-                        + ". Reason:\n"
-                        + e
-                    )
-        print("--------------------------")
+# @tasks.loop(hours=6)
+# async def transReset():
+#     for guild in bot.guilds:
+#         for member in guild.members:
+#             if checkIfAccountExists(member.id, guild.id):
+#                 account = getAccount(member.id, guild.id)
+#                 try:
+#                     updateTransactions(guild.id, account)
+#                 except Exception as e:
+#                     print(
+#                         "Unable to update trans for "
+#                         + str(member)
+#                         + ". Reason:\n"
+#                         + e
+#                     )
+#         print("--------------------------")
 
 
-@tasks.loop(hours=12)
-async def payday():
+# @tasks.loop(hours=12)
+# async def payday():
 
-    for guild in bot.guilds:
-        print("--------------------------")
-        print("Paycheck Summary: " + str(guild))
+#     for guild in bot.guilds:
+#         print("--------------------------")
+#         print("Paycheck Summary: " + str(guild))
 
-        for member in guild.members:
-            if checkIfAccountExists(member.id, guild.id):
-                account = getAccount(member.id, guild.id)
-                wage = account["Funny Wage"]
-                worked = account["Funny Worked"]
-                paycheck = account["Funny Wage"] * account["Funny Worked"]
+#         for member in guild.members:
+#             if checkIfAccountExists(member.id, guild.id):
+#                 account = getAccount(member.id, guild.id)
+#                 wage = account["Funny Wage"]
+#                 worked = account["Funny Worked"]
+#                 paycheck = account["Funny Wage"] * account["Funny Worked"]
 
-                print("    ###########################")
-                print("          User: " + str(member))
-                print("    Funny Wage: " + str(wage))
-                print("    Funny Wage: " + str(worked))
-                print("      Paycheck: " + str(paycheck))
+#                 print("    ###########################")
+#                 print("          User: " + str(member))
+#                 print("    Funny Wage: " + str(wage))
+#                 print("    Funny Wage: " + str(worked))
+#                 print("      Paycheck: " + str(paycheck))
 
-                try:
-                    updateBalance(guild.id, account, paycheck, False)
-                    updateFunnyWorked(
-                        guild.id, account, account["Funny Worked"] * -1
-                    )
-                    # updateTransactions(guild.id, account)
-                    print(
-                        "    Updated "
-                        + str(member)
-                        + "'s balance with a funny paycheck of "
-                        + str(paycheck)
-                    )
-                    print("    ###########################")
-                except Exception:
-                    print(
-                        "Unable to update "
-                        + str(member)
-                        + "'s paycheck of "
-                        + str(paycheck)
-                    )
-        print("--------------------------")
+#                 try:
+#                     updateBalance(guild.id, account, paycheck, False)
+#                     updateFunnyWorked(
+#                         guild.id, account, account["Funny Worked"] * -1
+#                     )
+#                     # updateTransactions(guild.id, account)
+#                     print(
+#                         "    Updated "
+#                         + str(member)
+#                         + "'s balance with a funny paycheck of "
+#                         + str(paycheck)
+#                     )
+#                     print("    ###########################")
+#                 except Exception:
+#                     print(
+#                         "Unable to update "
+#                         + str(member)
+#                         + "'s paycheck of "
+#                         + str(paycheck)
+#                     )
+#         print("--------------------------")
 
 
 @bot.event
@@ -132,8 +143,8 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print("------")
-    payday.start()
-    transReset.start()
+    #payday.start()
+    #transReset.start()
 
 
 """logging"""
@@ -204,7 +215,7 @@ async def on_message(message):
         await message.guild.get_member(bot.user.id).edit(nick="Deep State Rioter")
 
 
-    # if userID == 187063558037569536:  # Harry
+    # if userID == 749017521126113362:  # JH
     #     clown = message.channel
     #     if message.attachments:
     #         await clown.send(message.attachments[0].url)
@@ -223,51 +234,62 @@ async def on_message(message):
         "|============--------| 60%",
         "|==========----------| 50%",
     ]
-    nick = "Fuck the police"
-    if userID == 187063558037569536:  # Harry
+    nick = "Seething"
+    if userID == 749017521126113362:  # JH
         if message.author.nick != nick:
             await message.guild.get_member(userID).edit(nick=nick)
-        
-        if("cop" in content.casefold()
-    or "nigger" in content.casefold()
-    or "nigga" in content.casefold()
-    or "crime" in content.casefold()
-    or "black" in content.casefold()
-    or "drug" in content.casefold()
-    or "riot" in content.casefold()
-    or "triggered" in content.casefold()
-    or "seethe" in content.casefold()
-    or "cope" in content.casefold()
-    or "boot" in content.casefold()
-    or "argument" in content.casefold()
-    or "heroin" in content.casefold()
-    or "crack" in content.casefold()
-    or "libtard" in content.casefold()
-    or "autopsy" in content.casefold()
-    or "police" in content.casefold()
-    or "dance" in content.casefold()
-    or "dindu" in content.casefold()
-    or "riot" in content.casefold()):
             clown = message.channel
             await clown.send("`" + content + "`")
             await clown.send("Take retard level")
             await clown.send("`" + str(random.choice(randomLevel)) + "`")
+        
+    #     if("cop" in content.casefold()
+    # or "nigger" in content.casefold()
+    # or "nigga" in content.casefold()
+    # or "crime" in content.casefold()
+    # or "black" in content.casefold()
+    # or "drug" in content.casefold()
+    # or "riot" in content.casefold()
+    # or "triggered" in content.casefold()
+    # or "seethe" in content.casefold()
+    # or "cope" in content.casefold()
+    # or "boot" in content.casefold()
+    # or "argument" in content.casefold()
+    # or "heroin" in content.casefold()
+    # or "crack" in content.casefold()
+    # or "libtard" in content.casefold()
+    # or "autopsy" in content.casefold()
+    # or "police" in content.casefold()
+    # or "dance" in content.casefold()
+    # or "dindu" in content.casefold()
+    # or "riot" in content.casefold()):
+    #         clown = message.channel
+    #         await clown.send("`" + content + "`")
+    #         await clown.send("Take retard level")
+    #         await clown.send("`" + str(random.choice(randomLevel)) + "`")
 
 
-    posts = dbDiscord[ID]
+    # posts = dbDiscord[ID]
 
-    post_data = {
-        "content": content,
-        "User": user,
-        "Channel": channel,
-        "Message URL": messageURL,
-        "message ID": messageID,
-        "User ID": userID,
-    }
-    try:
-        _ = posts.insert_one(post_data)
-    except Exception as e:
-        print("Did not post to DB successfully. Reason:\n" + e)
+    # post_data = {
+    #     "content": content,
+    #     "User": user,
+    #     "Channel": channel,
+    #     "Message URL": messageURL,
+    #     "message ID": messageID,
+    #     "User ID": userID,
+    # }
+    # try:
+    #     _ = posts.insert_one(post_data)
+    # except Exception as e:
+    #     print("Did not post to DB successfully. Reason:\n" + e)
+
+
+    if userID == 749017521126113362: 
+        await message.add_reaction(emoji="💃")
+        await message.add_reaction(emoji="🕺")
+        await message.add_reaction(emoji="👯‍♂️")
+
 
     await bot.process_commands(message)
 
@@ -315,6 +337,53 @@ async def on_raw_reaction_add(RawReactionEvent):
         else:
             print("No funny account found")
             print("----------------------------------------------")
+    await checkPinnable(RawReactionEvent, message, False)
+
+async def checkPinnable(RawReactionEvent, message, isManualPin):
+    pinReaction = get(message.reactions, emoji="📌")
+    checkReact = get(message.reactions, emoji ="✔️")
+    totalReact = 0
+    for r in message.reactions:
+        totalReact += r.count
+    if ((pinReaction and pinReaction.count >= 5) or isManualPin) and checkReact is None:
+        await bot.get_channel(575888862719770624).send(embed = makeEmbed(message))
+        await message.add_reaction(emoji="✔️")
+
+def makeEmbed(message):
+    embed = discord.Embed(title="Pinned Message")
+    embed.set_thumbnail(url=message.author.avatar_url)
+
+    try:
+        author = "{} ({})".format(message.author, message.author.nick) \
+            if message.author.nick \
+            else "{}".format(message.author)
+    except AttributeError:
+        author = "{}".format(message.author)
+
+    embed.set_author(name="{}".format(author), icon_url=message.author.avatar_url)
+
+    embed.add_field(
+        name="Pin Clout",
+        value=message.jump_url,
+        inline=False,
+    )
+    if len(message.content) > 600:
+        content = message.content[0: 600] + ". . ."
+    elif len(message.content) == 0:
+        content = "Attatchment"
+    else:
+        content = message.content
+    embed.add_field(
+        name=message.author.name,
+        value=content,
+        inline=False,
+    )
+    if message.attachments:
+        if ".png" in message.attachments[0].url or ".jpg" in message.attachments[0].url or ".jpeg" in message.attachments[0].url:
+            embed.set_image(url=message.attachments[0].url)
+    embed.set_footer(text="in #" + message.channel.name)
+               
+    return embed
 
 
 @bot.event
@@ -525,6 +594,7 @@ async def spinCycle(ctx, UID: int):
         103702122251436032,
         458425335227088936,
         96799634948640768,
+        148209473373208577
     ]:
         try:
             member = ctx.guild.get_member(UID)
@@ -545,7 +615,7 @@ async def spinCycle(ctx, UID: int):
     else:
         await ctx.send("Okay retard... You wanted the funny...")
         try:
-            member = ctx.guild.get_member(UID)
+            member = ctx.guild.get_member(ctx.author.id)
             channels = []
             for channel in ctx.message.guild.voice_channels:
                 channels.append(channel)
@@ -611,7 +681,7 @@ async def combine(ctx):
 async def overwatch(ctx):
     channel = ctx.author.voice.channel
     voice = await channel.connect()
-    count = 3
+    count = 2
     while count > 0:
         dir = "./ClownBotPy/sound/combine/city/" + str(random.choice(os.listdir("./ClownBotPy/sound/combine/city/")))
         source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source=dir)
@@ -657,16 +727,41 @@ async def burg(ctx):
         await voiceLeave(ctx)
         break
 
-# @bot.command(name="square", aliases=['theShapeOfEvil', 'oog'])
-# async def square(ctx):
-#     channel = ctx.author.voice.channel
-#     voice = await channel.connect()
-#     source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/square.mp3")
-#     voice.play(source)
-#     while True:
-#       if not voice.is_playing():
-#         await voiceLeave(ctx)
-#         break
+@bot.command(name="square", aliases=['theShapeOfEvil', 'oog'])
+async def square(ctx):
+    if ctx.author.id == 380801506137473034: 
+        channel = ctx.author.voice.channel
+        voice = await channel.connect()
+        source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/square.mp3")
+        voice.play(source)
+        while True:
+            if not voice.is_playing():
+                await voiceLeave(ctx)
+                break
+    else:
+        await ctx.send("Noh")
+    
+@bot.command(name="amber", aliases=['alert', 'missingChild'])
+async def amber(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/amber.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
+@bot.command(name="hey", aliases=['lego', 'aMan'])
+async def hey(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/hey.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
 
 @bot.command(name="nerf")
 async def nerf(ctx):
@@ -679,12 +774,80 @@ async def nerf(ctx):
         await voiceLeave(ctx)
         break
 
+@bot.command(name="oh", aliases=['ohh', 'ooh'])
+async def oh(ctx):
+    channel = ctx.author.voice.channel
+    voice = await channel.connect()
+    source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/oh.mp3")
+    voice.play(source)
+    while True:
+      if not voice.is_playing():
+        await voiceLeave(ctx)
+        break
+
 @bot.command(name="retard")
 async def retard(ctx, member: discord.Member, nick):
     if(ctx.author.id == 380801506137473034):
         await member.edit(nick=nick)
     else:
         await ctx.send("Lol nah")
+
+@bot.command(name="gasChamber", aliases=['chamber'])
+async def retard(ctx, UID: int, *args):
+    if ctx.author.id in [
+        380801506137473034,
+        103702122251436032,
+        458425335227088936,
+        96799634948640768,
+        131549458604359680,
+        239219110871957505
+    ]:
+        member = ctx.guild.get_member(UID)
+        for channel in ctx.guild.voice_channels:
+            if channel.name == "Gas Chamber":
+                chamber = channel
+                break
+            else:
+                chamber = random.choice(ctx.guild.voice_channels)
+        await member.edit(voice_channel=chamber)
+        voice = await chamber.connect()
+        count = 10
+        while count > 0:
+            source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/nerf.mp3")
+            voice.play(source)
+            
+            while True:
+              if not voice.is_playing():
+                  count -= 1
+                  break;
+        while True:
+          if not voice.is_playing():
+            await voiceLeave(ctx)
+            break
+    else:
+        await ctx.send("You wanted the funny...")
+        member = ctx.guild.get_member(ctx.author.id)
+        for channel in ctx.guild.voice_channels:
+            if channel.name == "Gas Chamber":
+                chamber = channel
+                break
+            else:
+                chamber = random.choice(ctx.guild.voice_channels)
+        await member.edit(voice_channel=chamber)
+        voice = await chamber.connect()
+        count = 10
+        while count > 0:
+            source = discord.FFmpegPCMAudio(executable="C:/ffmpeg/bin/ffmpeg.exe", source="./ClownBotPy/sound/random/nerf.mp3")
+            voice.play(source)
+            
+            while True:
+              if not voice.is_playing():
+                  count -= 1
+                  break;
+        while True:
+          if not voice.is_playing():
+            await voiceLeave(ctx)
+            break
 
 
 @bot.command()
@@ -746,12 +909,61 @@ async def seethe(ctx, CID: int, UID: int):
     else:
         await ctx.send("Faggot")
 
+#Renames channel
+@bot.command()
+async def drug(ctx, CID: int):
+    if ctx.author.id == 380801506137473034:
+        try:
+            channel = ctx.guild.get_channel(CID)
+            await channel.edit(name="Insomniacs Anonymous")
+        except Exception as e:
+            print(e)
+    else:
+        await ctx.send("Faggot")
+
+@bot.command()
+async def clout(ctx):
+    if ctx.author.id == 380801506137473034:
+        highestCount = 0;
+        for member in ctx.guild.members:
+            await ctx.send("Getting all the messages from {}. . .".format(member.name))
+            count = 0
+            for channel in ctx.guild.text_channels:
+                async for message in channel.history(limit=None):
+                    if(member == message.author):
+                        count += 1
+            await ctx.send("-   {} has {} messages total".format(member.name, count))
+            if count > highestCount:
+                await ctx.send("`So far, the most messages sent by a user has been from {} with {} messages`".format(member.name, count))
+                highestCount = count
+        await ctx.send("Okay, all done!")
+                
+
+        # count = 0
+        # hit1 = False;
+        # hit2 = False;
+        # hit3 = False;
+        # async for _ in channel.history(limit=None):
+        #     count += 1
+        #     if(count > 500000 and hit3 == False):
+        #         await ctx.send("At 500,000 messages so far. . . Stay tuned. . .")
+        #         hit3 = True;
+        #     if(count > 100000 and hit2 == False):
+        #         await ctx.send("At 100,000 messages so far. . .")
+        #         hit2 = True;
+        #     if(count > 10000 and hit1 == False):
+        #         await ctx.send("Over 10,000 messages. . .")
+        #         hit1 = True;
+        # await ctx.send("There were {} messages in {}".format(count, channel.mention))
+    else:
+        await ctx.send("Fuck off, retard, Im testing shit")
+
 
 @bot.command()
 async def repeat(ctx, times: int, content: str):
     """Repeats a message multiple times."""
     if ctx.author.id == 380801506137473034 or ctx.author.id == 96799634948640768:
-        if times > 150:
+        if times > 50:
             await ctx.send("Boi you just spamming at that point")
         # elif '@' in content:
         #     await ctx.send('Dont @ me bro')
@@ -1033,7 +1245,7 @@ async def charge(ctx, member: discord.Member, funnyBucks: str):
                         )
             else:
                 await ctx.send(
-                    "That user does not yet have a First Bank of Funny"
+                    "You or the user do not have a First Bank of Funny"
                     + " account. They will need to `!createFunnyAccount`"
                     + " before you can charge them for being unfunny!"
                 )
@@ -1105,7 +1317,7 @@ async def give(ctx, member: discord.Member, funnyBucks: str):
                         )
             else:
                 await ctx.send(
-                    "That user does not yet have a First Bank of Funny"
+                    "You or the user do not have a First Bank of Funny"
                     + " account. They will need to `!createFunnyAccount` "
                     + "before you can reward them for being funny!"
                 )
